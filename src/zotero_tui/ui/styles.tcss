@@ -1,0 +1,110 @@
+/* --- Global Layout --- */
+
+Screen {
+    layout: vertical;
+}
+
+#container {
+    height: 1fr;
+    layout: grid;
+    grid-size: 2;
+    grid-columns: 1fr 1fr;
+}
+
+/* --- Left Column: Table & Sub-Header --- */
+
+#table-container {
+    height: 1fr;
+    border: tall $accent;
+    layout: vertical;
+}
+
+#main-table {
+    height: 1fr;
+    border: none;
+}
+
+/* --- Right Column: Details --- */
+
+#detail-panel {
+    height: 100%;
+    border: tall $secondary;
+    padding: 1;
+    background: $surface;
+    overflow-y: scroll;
+}
+
+/* --- Bottom Bars (Docked) --- */
+
+SearchBar {
+    dock: bottom;
+    display: none;
+    height: 1;
+    background: $surface;
+    color: $text;
+}
+
+/* Ensure Input is visible at height 1 by stripping all padding */
+SearchBar Input {
+    border: none;
+    height: 1;
+    padding: 0;
+    margin: 0;
+    background: $surface;
+}
+
+SearchBar Static#prompt {
+    width: 2;
+    padding: 0 0 0 1;
+    color: $warning;
+    text-style: bold;
+}
+
+Footer {
+    dock: bottom;
+}
+
+/* --- State Toggles --- */
+
+/* Hide the Footer when searching to make room for the SearchBar */
+ZoteroApp.searching Footer {
+    display: none;
+}
+
+/* Show the SearchBar only when the .searching class is present */
+ZoteroApp.searching SearchBar {
+    display: block;
+}
+
+/* --- AttachmentMenu --- */
+
+AttachmentMenu {
+    align: center middle;
+    background: rgba(0, 0, 0, 0.5); /* Dim the background */
+}
+
+#dialog {
+    width: 60;
+    height: 15;
+    background: $surface;
+    border: thick $primary;
+    padding: 1;
+}
+
+#dialog-title {
+    text-align: center;
+    width: 100%;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+#attachment-list {
+    height: 1fr;
+    border: none;
+}
+
+#dialog-footer {
+    text-align: center;
+    color: $text-muted;
+    margin-top: 1;
+}
