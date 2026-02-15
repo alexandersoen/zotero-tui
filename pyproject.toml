@@ -5,6 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "bibtexparser>=1.4.4",
+    "pyperclip>=1.11.0",
     "textual>=7.5.0",
 ]
 

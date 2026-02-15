@@ -1,3 +1,5 @@
+import pyperclip
+
 from pathlib import Path
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal
@@ -9,6 +11,7 @@ from zotero_tui.ui.events import SearchChanged, SearchClosed
 from zotero_tui.ui.screens.attachment_menu import AttachmentMenu
 from zotero_tui.ui.widget.item_table import ZoteroTable
 from zotero_tui.ui.widget.search_bar import SearchBar
+
 # from zotero_tui.ui.widget.status_bar import StatusBar
 from zotero_tui.utils.system import open_file
 
@@ -28,6 +31,7 @@ class ZoteroApp(App):
     Binding("/", "focus_search", "Search", show=True),
     Binding("V", "view_pdf", "View PDF", show=True),
     Binding("escape", "cancel_search", "Normal Mode", show=False),
+    Binding("y", "yank_bibtex", "Yank BibTeX", show=True),
   ]
 
   def __init__(self, items: list[ZoteroItem]) -> None:
@@ -36,7 +40,7 @@ class ZoteroApp(App):
 
   # --- Setup ---
   def compose(self) -> ComposeResult:
-    yield Header()
+    # yield Header()
     with Horizontal(id="container"):
       yield ZoteroTable(id="main-table")
       yield Static(id="detail-panel")
@@ -116,6 +120,24 @@ class ZoteroApp(App):
     item_id = int(cell_key.row_key.value)
     item = self.items_data[item_id]
     self._handle_pdf_launch(item)
+
+  def action_yank_bibtex(self) -> None:
+    table = self.query_one(ZoteroTable)
+
+    cell_key = table.coordinate_to_cell_key(table.cursor_coordinate)
+    if cell_key.row_key is None or cell_key.row_key.value is None:
+      return
+
+    item_id = int(cell_key.row_key.value)
+    item = self.items_data[item_id]
+    try:
+      bib_string = item.to_bibtex()
+      pyperclip.copy(bib_string)
+      self.notify(f"BibTeX copied to clipboard:\n{bib_string}", title="Yank Successful")
+    except ValueError as e:
+      self.notify(str(e), title="BibTeX Error", severity="error")
+    except Exception as e:
+      self.notify(f"Clipboard error: {e}", severity="error")
 
   # --- Helpers ---
   def _handle_pdf_launch(self, item: ZoteroItem) -> None:

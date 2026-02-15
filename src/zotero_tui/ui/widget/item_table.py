@@ -32,7 +32,7 @@ class ZoteroTable(DataTable):
 
     for item in filtered:
       self.add_row(
-        item.date[:4] if item.date else "----",
+        str(item.year) if item.year > 0 else "----",
         item.author_summary,
         item.title,
         key=str(item.item_id),
