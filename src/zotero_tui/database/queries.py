@@ -84,7 +84,7 @@ def get_venue_str(meta: dict[str, str]) -> str | None:
 def fetch_all_items(conn: sqlite3.Connection):
   """Generates ZoteroItem objects by orchestrating helper functions."""
   # Main metadata query
-  ignore_fields = {"abstractNote", "accessDate", "libraryCatalog", "language"}
+  ignore_fields = {"accessDate", "libraryCatalog", "language"}
   query = """
     SELECT 
         i.itemID,
@@ -127,6 +127,7 @@ def fetch_all_items(conn: sqlite3.Connection):
       title=meta["title"],
       authors=fetch_authors_for_item(conn, key.item_id),
       year=year or 0,
+      abstract=meta.get("abstractNote"),
       attachments=fetch_attachments_for_item(conn, key.item_id),
       # Meta
       venue=get_venue_str(meta),

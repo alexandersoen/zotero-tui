@@ -79,7 +79,9 @@ class ZoteroApp(App):
     item = self.items_data[item_id]
 
     detail_panel = self.query_one("#detail-panel", Static)
-    content = f"[b]{item.title}[/b] ({item.item_id})\n\n[i]{item.author_summary}[/i]"  # \n\n{item.abstract}"
+    content = f"[b]{item.title}[/b] ({item.item_id})\n\n[i]{item.author_full}[/i]"
+    if item.abstract:
+      content += f"\n\nAbstract:\n{item.abstract}"
     detail_panel.update(content)
 
   # --- Actions ---

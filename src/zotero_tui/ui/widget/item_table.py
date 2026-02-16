@@ -22,13 +22,7 @@ class ZoteroTable(DataTable):
   def apply_filter(self, query: str) -> int:
     """Clears the table and re-adds rows based on query."""
     self.clear()
-    query = query.lower()
-
-    filtered = [
-      item
-      for item in self.master_items
-      if query in item.title.lower() or query in item.author_summary.lower()
-    ]
+    filtered = [item for item in self.master_items if item.is_query_match(query)]
 
     for item in filtered:
       self.add_row(

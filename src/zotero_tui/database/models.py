@@ -30,8 +30,15 @@ class Author:
   last_name: str
   first_name: str
 
-  def __str__(self):
-    return f"{self.last_name}, {self.first_name}"
+  def __str__(self) -> str:
+    # return f"{self.last_name}, {self.first_name}"
+    return f"{self.first_name} {self.last_name}"
+
+  @property
+  def short_str(self) -> str:
+    initials_list = [f"{s[0].upper()}." for s in self.first_name.split()]
+    initials = " ".join(initials_list)
+    return f"{initials} {self.last_name}"
 
 
 @dataclass(frozen=True)
@@ -52,6 +59,7 @@ class ZoteroItem:
   publisher: str | None = None
   # abstract: str
 
+  abstract: str | None = None
   attachments: list[Attachment] = field(default_factory=list)
 
   @property
@@ -65,6 +73,29 @@ class ZoteroItem:
       return f"{self.authors[0].last_name} et al."
 
     return self.authors[0].last_name
+
+  @property
+  def author_full(self) -> str:
+    if not self.authors:
+      return "Unknown"
+
+    return "; ".join([str(author) for author in self.authors])
+
+  def is_query_match(self, query: str) -> bool:
+    query = query.lower()
+
+    if query in self.title.lower():
+      return True
+
+    for author in self.authors:
+      if (
+        query in author.first_name.lower()
+        or query in author.last_name.lower()
+        or query in author.short_str.lower()
+      ):
+        return True
+
+    return False
 
   def to_bibtex(self) -> str:
     # Strict mapping requirement
