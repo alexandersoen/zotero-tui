@@ -34,6 +34,15 @@ Screen {
     overflow-y: scroll;
 }
 
+#container.hide-details {
+    grid-size: 1;
+    grid-columns: 1fr;
+}
+
+#container.hide-details #detail-panel {
+    display: none;
+}
+
 /* --- Bottom Bars (Docked) --- */
 
 SearchBar {

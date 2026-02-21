@@ -3,10 +3,12 @@ import pyperclip
 from pathlib import Path
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal
-from textual.widgets import DataTable, Input, Static, Footer, Header
+from textual.widgets import DataTable, Input, Static, Footer
 from textual.binding import Binding
 
+from zotero_tui.database.connection import ZoteroDB
 from zotero_tui.database.models import Attachment, ZoteroItem
+from zotero_tui.database.queries import fetch_all_items
 from zotero_tui.ui.events import SearchChanged, SearchClosed
 from zotero_tui.ui.screens.attachment_menu import AttachmentMenu
 from zotero_tui.ui.widget.item_table import ZoteroTable
@@ -18,6 +20,7 @@ from zotero_tui.utils.system import open_file
 
 class ZoteroApp(App):
   CSS_PATH = "styles.tcss"
+  UPDATE_RATE = 10.0
 
   # VIM BINDINGS
   BINDINGS = [
@@ -32,15 +35,16 @@ class ZoteroApp(App):
     Binding("V", "view_pdf", "View PDF", show=True),
     Binding("escape", "cancel_search", "Normal Mode", show=False),
     Binding("y", "yank_bibtex", "Yank BibTeX", show=True),
+    Binding("t", "toggle_details", "Toggle Details", show=True),
   ]
 
-  def __init__(self, items: list[ZoteroItem]) -> None:
+  def __init__(self, db: ZoteroDB) -> None:
     super().__init__()
-    self.items_data = {item.item_id: item for item in items}
+    self.db = db
+    self.item_data = self._get_item_data()
 
   # --- Setup ---
   def compose(self) -> ComposeResult:
-    # yield Header()
     with Horizontal(id="container"):
       yield ZoteroTable(id="main-table")
       yield Static(id="detail-panel")
@@ -49,22 +53,38 @@ class ZoteroApp(App):
     yield Footer()
 
   def on_mount(self) -> None:
-    items = list(self.items_data.values())
-
-    # self.query_one(StatusBar).update_counts(len(items), len(items))
+    items = list(self.item_data.values())
 
     table = self.query_one(ZoteroTable)
     table.load_data(items)
     table.focus()
 
+    self.set_interval(self.UPDATE_RATE, self.check_for_table_update)
+
+  # --- Update Table ---
+  async def check_for_table_update(self) -> None:
+    if self.db.has_update():
+      self.notify("Database change detected! Refreshing...", title="Zotero Sync")
+      await self.reload_library_data()
+
+  async def reload_library_data(self) -> None:
+    self.item_data = self._get_item_data()
+
+    query = self.query_one("#search-input", Input)
+    search_input = query.value
+
+    items = list(self.item_data.values())
+
+    table = self.query_one(ZoteroTable)
+    table.clear()
+    table.load_data(items)
+
+    table.apply_filter(search_input)
+
   # --- Event Handlers ---
   def on_search_changed(self, message: SearchChanged) -> None:
     table = self.query_one(ZoteroTable)
     table.apply_filter(message.query)
-    # count =
-    # total = len(table.master_items)
-
-    # self.query_one(StatusBar).update_counts(count, total)
 
   def on_search_closed(self, _: SearchClosed) -> None:
     """Cleanup when search finishes."""
@@ -76,7 +96,7 @@ class ZoteroApp(App):
       return
 
     item_id = int(event.row_key.value)
-    item = self.items_data[item_id]
+    item = self.item_data[item_id]
 
     detail_panel = self.query_one("#detail-panel", Static)
     content = f"[b]{item.title}[/b] ({item.item_id})\n\n[i]{item.author_full}[/i]"
@@ -99,6 +119,11 @@ class ZoteroApp(App):
     """Scroll half a page up (Vim ctrl+u)."""
     self.query_one(ZoteroTable).action_page_up()
 
+  def action_toggle_details(self) -> None:
+    """Toggle the visibility of the detail panel."""
+    container = self.query_one("#container")
+    container.toggle_class("hide-details")
+
   def action_focus_search(self) -> None:
     self.add_class("searching")
 
@@ -120,7 +145,7 @@ class ZoteroApp(App):
       return
 
     item_id = int(cell_key.row_key.value)
-    item = self.items_data[item_id]
+    item = self.item_data[item_id]
     self._handle_pdf_launch(item)
 
   def action_yank_bibtex(self) -> None:
@@ -131,7 +156,7 @@ class ZoteroApp(App):
       return
 
     item_id = int(cell_key.row_key.value)
-    item = self.items_data[item_id]
+    item = self.item_data[item_id]
     try:
       bib_string = item.to_bibtex()
       pyperclip.copy(bib_string)
@@ -142,6 +167,12 @@ class ZoteroApp(App):
       self.notify(f"Clipboard error: {e}", severity="error")
 
   # --- Helpers ---
+  def _get_item_data(self) -> dict[int, ZoteroItem]:
+    with self.db.connect() as conn:
+      items = list(fetch_all_items(conn))
+
+    return {item.item_id: item for item in items}
+
   def _handle_pdf_launch(self, item: ZoteroItem) -> None:
     if not item.attachments:
       self.notify("No PDF attached", severity="error")

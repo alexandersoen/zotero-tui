@@ -82,6 +82,9 @@ class ZoteroItem:
     return "; ".join([str(author) for author in self.authors])
 
   def is_query_match(self, query: str) -> bool:
+    if not query:
+      return True
+
     query = query.lower()
 
     if query in self.title.lower():
