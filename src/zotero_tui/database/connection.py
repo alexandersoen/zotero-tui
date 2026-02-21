@@ -37,6 +37,10 @@ class ZoteroDB:
 
   def has_update(self) -> bool:
     cur_version = self.get_data_version()
+    if self._last_version is None:
+      self._last_version = cur_version
+      return False
+
     if self._last_version != cur_version:
       self._last_version = cur_version
       return True

@@ -45,6 +45,7 @@ class ZoteroApp(App):
 
   # --- Setup ---
   def compose(self) -> ComposeResult:
+    """Basically the setup + layout of the TUI."""
     with Horizontal(id="container"):
       yield ZoteroTable(id="main-table")
       yield Static(id="detail-panel")
@@ -63,11 +64,13 @@ class ZoteroApp(App):
 
   # --- Update Table ---
   async def check_for_table_update(self) -> None:
+    """Polling function for update checks."""
     if self.db.has_update():
       self.notify("Database change detected! Refreshing...", title="Zotero Sync")
       await self.reload_library_data()
 
   async def reload_library_data(self) -> None:
+    """Library reload function. Also keeps search the same."""
     self.item_data = self._get_item_data()
 
     query = self.query_one("#search-input", Input)
@@ -83,6 +86,7 @@ class ZoteroApp(App):
 
   # --- Event Handlers ---
   def on_search_changed(self, message: SearchChanged) -> None:
+    """Filters depending on search."""
     table = self.query_one(ZoteroTable)
     table.apply_filter(message.query)
 
@@ -99,16 +103,18 @@ class ZoteroApp(App):
     item = self.item_data[item_id]
 
     detail_panel = self.query_one("#detail-panel", Static)
-    content = f"[b]{item.title}[/b] ({item.item_id})\n\n[i]{item.author_full}[/i]"
+    content = f"[b]{item.title}[/b] ({item.item_id})\n\n[i]{item.author_full()}[/i]"
     if item.abstract:
       content += f"\n\nAbstract:\n{item.abstract}"
     detail_panel.update(content)
 
   # --- Actions ---
   def action_cursor_down(self) -> None:
+    """Down (Vim j)."""
     self.query_one(ZoteroTable).action_cursor_down()
 
   def action_cursor_up(self) -> None:
+    """Down (Vim k)."""
     self.query_one(ZoteroTable).action_cursor_up()
 
   def action_page_down(self) -> None:
@@ -125,6 +131,7 @@ class ZoteroApp(App):
     container.toggle_class("hide-details")
 
   def action_focus_search(self) -> None:
+    """Initialize search bar."""
     self.add_class("searching")
 
     bar = self.query_one(SearchBar)
@@ -149,6 +156,7 @@ class ZoteroApp(App):
     self._handle_pdf_launch(item)
 
   def action_yank_bibtex(self) -> None:
+    """Yanks bibtex of item into clipboard."""
     table = self.query_one(ZoteroTable)
 
     cell_key = table.coordinate_to_cell_key(table.cursor_coordinate)
@@ -168,12 +176,14 @@ class ZoteroApp(App):
 
   # --- Helpers ---
   def _get_item_data(self) -> dict[int, ZoteroItem]:
+    """Gets item data from DB."""
     with self.db.connect() as conn:
       items = list(fetch_all_items(conn))
 
     return {item.item_id: item for item in items}
 
   def _handle_pdf_launch(self, item: ZoteroItem) -> None:
+    """Handler for opening PDFs."""
     if not item.attachments:
       self.notify("No PDF attached", severity="error")
 
@@ -189,6 +199,7 @@ class ZoteroApp(App):
       self.push_screen(AttachmentMenu(item.attachments), handle_selection)
 
   def _open_attachment(self, attachment: Attachment) -> None:
+    """Open attachement helper."""
     storage_base = Path("~/Zotero/storage").expanduser()
     full_path = attachment.get_absolute_path(storage_base)
 

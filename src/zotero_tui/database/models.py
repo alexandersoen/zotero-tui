@@ -1,8 +1,13 @@
 import bibtexparser
 
-from dataclasses import dataclass, field
 from pathlib import Path
+from dataclasses import dataclass, field
+
+from rapidfuzz import fuzz
 from bibtexparser.bibdatabase import BibDatabase
+
+
+FUZZY_THRESHOLD = 65
 
 
 class UnsupportedItemTypeError(Exception):
@@ -74,29 +79,33 @@ class ZoteroItem:
 
     return self.authors[0].last_name
 
-  @property
-  def author_full(self) -> str:
+  def author_full(self, sep_str: str = "; ") -> str:
+    """Returns full author name."""
     if not self.authors:
       return "Unknown"
 
-    return "; ".join([str(author) for author in self.authors])
+    return sep_str.join([str(author) for author in self.authors])
 
   def is_query_match(self, query: str) -> bool:
+    """Checks if string query is a match."""
     if not query:
       return True
 
     query = query.lower()
 
-    if query in self.title.lower():
+    # Check year
+    if str(self.year) in query:
       return True
 
-    for author in self.authors:
-      if (
-        query in author.first_name.lower()
-        or query in author.last_name.lower()
-        or query in author.short_str.lower()
-      ):
-        return True
+    # Check title
+    title_score = fuzz.partial_ratio(query, self.title.lower())
+    if title_score >= FUZZY_THRESHOLD:
+      return True
+
+    # Check author
+    author_score = fuzz.partial_ratio(query, self.author_full(sep_str=" "))
+    if author_score >= FUZZY_THRESHOLD:
+      return True
 
     return False
 

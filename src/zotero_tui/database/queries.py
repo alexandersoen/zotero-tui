@@ -51,6 +51,7 @@ def fetch_attachments_for_item(
 
 
 def get_venue_str(meta: dict[str, str]) -> str | None:
+  """Gets the venue string. Lots of heuristics."""
   key_order = [
     "proceedingsTitle",
     "series",
