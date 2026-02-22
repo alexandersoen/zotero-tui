@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from zotero_tui.database.connection import ZoteroDB
 from zotero_tui.ui.app import ZoteroApp
 

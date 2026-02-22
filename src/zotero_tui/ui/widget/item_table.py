@@ -1,12 +1,12 @@
-from dataclasses import dataclass
 from itertools import cycle
-from typing import Any, Callable
+from typing import Any, Callable, NamedTuple
+
 from textual.widgets import DataTable
+
 from zotero_tui.database.models import ZoteroItem
 
 
-@dataclass
-class SortOrder:
+class SortOrder(NamedTuple):
   display_str: str
   key_func: Callable[[ZoteroItem], Any]
   reverse: bool

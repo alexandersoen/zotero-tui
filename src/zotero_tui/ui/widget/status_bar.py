@@ -1,5 +1,5 @@
-from textual.widgets import Static
 from textual.reactive import reactive
+from textual.widgets import Static
 
 
 class StatusBar(Static):
@@ -19,7 +19,9 @@ class StatusBar(Static):
     self._update_display()
 
   def _update_display(self) -> None:
-    self.update(f"Sort: {self.sort_description}  |  [b]{self.found}[/b] / {self.total} items")
+    self.update(
+      f"Sort: {self.sort_description}  |  [b]{self.found}[/b] / {self.total} items"
+    )
 
   def update_all(self, sort_desc: str, found: int, total: int) -> None:
     self.sort_description = sort_desc

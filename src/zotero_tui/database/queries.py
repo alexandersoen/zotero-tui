@@ -1,10 +1,9 @@
-import json
 import sqlite3
-
 from collections import defaultdict
 from pathlib import Path
 from typing import NamedTuple
-from zotero_tui.database.models import ZoteroItem, Attachment, Author
+
+from zotero_tui.database.models import Attachment, Author, ZoteroItem
 
 
 class EntryKey(NamedTuple):

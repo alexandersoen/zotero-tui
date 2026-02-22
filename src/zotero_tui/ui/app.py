@@ -1,10 +1,10 @@
-import pyperclip
-
 from pathlib import Path
+
+import pyperclip
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal
-from textual.widgets import DataTable, Input, Static, Footer
 from textual.binding import Binding
+from textual.containers import Horizontal
+from textual.widgets import DataTable, Footer, Input, Static
 
 from zotero_tui.database.connection import ZoteroDB
 from zotero_tui.database.models import Attachment, ZoteroItem
