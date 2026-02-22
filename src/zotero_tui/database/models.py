@@ -7,7 +7,7 @@ from rapidfuzz import fuzz
 from bibtexparser.bibdatabase import BibDatabase
 
 
-FUZZY_THRESHOLD = 65
+FUZZY_THRESHOLD = 70
 
 
 class UnsupportedItemTypeError(Exception):

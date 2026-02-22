@@ -11,10 +11,9 @@ from zotero_tui.database.models import Attachment, ZoteroItem
 from zotero_tui.database.queries import fetch_all_items
 from zotero_tui.ui.events import SearchChanged, SearchClosed
 from zotero_tui.ui.screens.attachment_menu import AttachmentMenu
-from zotero_tui.ui.widget.item_table import ZoteroTable
+from zotero_tui.ui.widget.item_table import SORT_ORDERING, ZoteroTable
 from zotero_tui.ui.widget.search_bar import SearchBar
-
-# from zotero_tui.ui.widget.status_bar import StatusBar
+from zotero_tui.ui.widget.status_bar import StatusBar
 from zotero_tui.utils.system import open_file
 
 
@@ -36,12 +35,14 @@ class ZoteroApp(App):
     Binding("escape", "cancel_search", "Normal Mode", show=False),
     Binding("y", "yank_bibtex", "Yank BibTeX", show=True),
     Binding("t", "toggle_details", "Toggle Details", show=True),
+    Binding("s", "cycle_sort", "Cycle Sort", show=True),
   ]
 
   def __init__(self, db: ZoteroDB) -> None:
     super().__init__()
     self.db = db
     self.item_data = self._get_item_data()
+    self.sort_order = next(SORT_ORDERING)
 
   # --- Setup ---
   def compose(self) -> ComposeResult:
@@ -52,13 +53,18 @@ class ZoteroApp(App):
 
     yield SearchBar(id="search-bar")
     yield Footer()
+    yield StatusBar(id="status-bar")
 
   def on_mount(self) -> None:
     items = list(self.item_data.values())
+    total = len(items)
 
     table = self.query_one(ZoteroTable)
-    table.load_data(items)
+    table.load_data(items, self.sort_order)
     table.focus()
+
+    status_bar = self.query_one(StatusBar)
+    status_bar.update_all(self.sort_order.display_str, total, total)
 
     self.set_interval(self.UPDATE_RATE, self.check_for_table_update)
 
@@ -67,9 +73,9 @@ class ZoteroApp(App):
     """Polling function for update checks."""
     if self.db.has_update():
       self.notify("Database change detected! Refreshing...", title="Zotero Sync")
-      await self.reload_library_data()
+      self.reload_library_data()
 
-  async def reload_library_data(self) -> None:
+  def reload_library_data(self) -> None:
     """Library reload function. Also keeps search the same."""
     self.item_data = self._get_item_data()
 
@@ -77,18 +83,25 @@ class ZoteroApp(App):
     search_input = query.value
 
     items = list(self.item_data.values())
+    total = len(items)
 
     table = self.query_one(ZoteroTable)
     table.clear()
-    table.load_data(items)
+    table.load_data(items, self.sort_order)
 
-    table.apply_filter(search_input)
+    found = table.apply_filter(search_input, self.sort_order)
+
+    status_bar = self.query_one(StatusBar)
+    status_bar.update_all(self.sort_order.display_str, found, total)
 
   # --- Event Handlers ---
   def on_search_changed(self, message: SearchChanged) -> None:
     """Filters depending on search."""
     table = self.query_one(ZoteroTable)
-    table.apply_filter(message.query)
+    found = table.apply_filter(message.query, self.sort_order)
+
+    status_bar = self.query_one(StatusBar)
+    status_bar.found = found
 
   def on_search_closed(self, _: SearchClosed) -> None:
     """Cleanup when search finishes."""
@@ -173,6 +186,11 @@ class ZoteroApp(App):
       self.notify(str(e), title="BibTeX Error", severity="error")
     except Exception as e:
       self.notify(f"Clipboard error: {e}", severity="error")
+
+  def action_cycle_sort(self) -> None:
+    """Cycle sort options."""
+    self.sort_order = next(SORT_ORDERING)
+    self.reload_library_data()
 
   # --- Helpers ---
   def _get_item_data(self) -> dict[int, ZoteroItem]:

@@ -2,10 +2,12 @@
 
 Screen {
     layout: vertical;
+    layers: base footer status;
 }
 
 #container {
     height: 1fr;
+    margin-bottom: 2;
     layout: grid;
     grid-size: 2;
     grid-columns: 1fr 1fr;
@@ -69,8 +71,20 @@ SearchBar Static#prompt {
     text-style: bold;
 }
 
+#status-bar {
+    dock: bottom;
+    layer: status;
+    height: 1;
+    offset-y: -1;
+    padding: 0 1;
+    background: $surface;
+    color: $text-primary;
+    content-align: left middle;
+}
+
 Footer {
     dock: bottom;
+    layer: footer;
 }
 
 /* --- State Toggles --- */
