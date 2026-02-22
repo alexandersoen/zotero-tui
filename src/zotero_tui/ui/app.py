@@ -24,17 +24,22 @@ class ZoteroApp(App):
   # VIM BINDINGS
   BINDINGS = [
     Binding("q", "quit", "Quit", show=True),
+    # Navigation
     Binding("j", "cursor_down", "Down", show=False),
     Binding("k", "cursor_up", "Up", show=False),
+    Binding("h", "cursor_left", "Down", show=False),
+    Binding("l", "cursor_right", "Up", show=False),
     Binding("ctrl+d", "page_down", "Page Down", show=False),
     Binding("ctrl+u", "page_up", "Page Up", show=False),
-    Binding("gg", "scroll_home", "Top", show=False),
-    Binding("G", "scroll_end", "Bottom", show=False),
-    Binding("/", "focus_search", "Search", show=True),
-    Binding("V", "view_pdf", "View PDF", show=True),
-    Binding("escape", "cancel_search", "Normal Mode", show=False),
-    Binding("y", "yank_bibtex", "Yank BibTeX", show=True),
+    # Detail toggle
     Binding("t", "toggle_details", "Toggle Details", show=True),
+    # Search
+    Binding("/", "focus_search", "Search", show=True),
+    Binding("escape", "cancel_search", "Normal Mode", show=False),
+    # Extract information
+    Binding("V", "view_pdf", "View PDF", show=True),
+    Binding("y", "yank_bibtex", "Yank BibTeX", show=True),
+    # Sorting
     Binding("s", "cycle_sort", "Cycle Sort", show=True),
   ]
 
@@ -129,6 +134,16 @@ class ZoteroApp(App):
   def action_cursor_up(self) -> None:
     """Down (Vim k)."""
     self.query_one(ZoteroTable).action_cursor_up()
+
+  def action_cursor_left(self) -> None:
+    """Down (Vim h)."""
+    for _ in range(10):
+      self.query_one(ZoteroTable).action_cursor_left()
+
+  def action_cursor_right(self) -> None:
+    """Down (Vim l)."""
+    for _ in range(10):
+      self.query_one(ZoteroTable).action_cursor_right()
 
   def action_page_down(self) -> None:
     """Scroll half a page down (Vim ctrl+d)."""
