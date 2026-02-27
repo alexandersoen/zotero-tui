@@ -116,7 +116,7 @@ def fetch_all_items(conn: sqlite3.Connection):
     data[key][field] = value
 
   for key, meta in data.items():
-    year = int(meta["date"][:4])
+    year = int(meta["date"][:4]) if "date" in meta else -1  # default for missing
 
     yield ZoteroItem(
       # Keys
