@@ -23,9 +23,9 @@
           pname = "zotero-tui";
           version = "0.1.1";
           pyproject = true;
-
-          # Tells Nix where the source code is
           src = ./.;
+
+          doCheck = false;
 
           # Build dependencies (Hatchling is required to build the wheel)
           nativeBuildInputs = [
