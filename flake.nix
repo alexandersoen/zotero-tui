@@ -16,7 +16,7 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        python = pkgs.python311; # Matches your >=3.11 requirement
+        python = pkgs.python312;
       in
       {
         packages.default = python.pkgs.buildPythonApplication {
